@@ -4,6 +4,22 @@ import readEnv, { ENVKEY } from "./readEnv.js";
 
 const tokenKey = readEnv(ENVKEY.token_key);
 
+
+/**
+ * @param {Object | undefined} body
+ */
+function bodyStringify(body) {
+	let wrongString = JSON.stringify(body);
+	//TODO cleanup
+	wrongString = wrongString.
+		slice(1, wrongString.length - 1).
+		//replaceAll("\":", ":").
+		//replaceAll(",\"", ",").
+		//replaceAll("{\"", "{").
+		replaceAll("\\\"", "\"");
+	return wrongString;
+}
+
 class SessionManager {
 	constructor() { }
 
@@ -30,6 +46,15 @@ class SessionManager {
 	apiOrigin() {
 		return readEnv(ENVKEY.api_origin);
 	}
+	apiIsHealthy() {
+		return new Promise((resolve) => {
+			fetch(this.apiOrigin()).
+				then(
+					(value) => resolve(value.ok),
+					() => resolve(false)
+				);
+		});
+	}
 
 	/**
 	 * @param {string} url
@@ -39,16 +64,27 @@ class SessionManager {
 		return new Promise((resolve, reject) => {
 			function rejector() { reject(); }
 
-			let token = this.#getToken();
-			if (token != null) {
+			let actualHeaders = new Headers();
+			{
 				if (headers != undefined) {
-					headers["Authorization"] = token;
-				} else {
-					headers = { Authorization: token };
+					for (let [k, v] of Object.entries(headers)) {
+						actualHeaders.set(k, v);
+					}
+				}
+				actualHeaders.set("Content-Type", "application/json");
+				let token = this.#getToken();
+				if (token != null) {
+					actualHeaders.set("Authorization", token);
 				}
 			}
 
-			fetch(url, { headers }).
+			fetch(
+				url,
+				{
+					method: "GET",
+					headers: actualHeaders
+				}
+			).
 				then(
 					(response) => response.ok ? response.json() : reject(),
 					rejector
@@ -62,23 +98,37 @@ class SessionManager {
 
 	/**
 	 * @param {string} url
+	 * @param {Object} [body]
 	 * @param {{[k:string]:string}} [headers]
-	 * @param {BodyInit} [body]
 	 */
-	postResource(url, headers, body) {
+	postResource(url, body, headers) {
 		return new Promise((resolve, reject) => {
 			function rejector() { reject(); }
 
-			let token = this.#getToken();
-			if (token != null) {
+			let actualHeaders = new Headers();
+			{
 				if (headers != undefined) {
-					headers["Authorization"] = token;
-				} else {
-					headers = { Authorization: token };
+					for (let [k, v] of Object.entries(headers)) {
+						actualHeaders.set(k, v);
+					}
+				}
+				actualHeaders.set("Content-Type", "application/json");
+				let token = this.#getToken();
+				if (token != null) {
+					actualHeaders.set("Authorization", token);
 				}
 			}
 
-			fetch(url, { headers, body }).
+			let actualBody = bodyStringify(body);
+
+			fetch(
+				url,
+				{
+					method: "POST",
+					headers: actualHeaders,
+					body: actualBody
+				}
+			).
 				then(
 					(response) => response.ok ? response.json() : reject(),
 					rejector

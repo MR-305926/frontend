@@ -42,23 +42,16 @@ class QueryState {
 	}
 
 	/**
-	 * 
 	 * @param {string} url 
 	 * @param {{[k:string]:string}} [headers]
 	 */
 	dispatch(url, headers) {
-		let body = {};
+		let body = Object.create(null);
 		if (this.#selector != undefined) body["selector"] = this.#selector;
 		if (this.#filter != undefined) body["where"] = this.#filter;
 		body["skip"] = this.#pageIndex * this.#pageSize;
 		body["amount"] = this.pageSize;
-
-		if (headers == undefined) {
-			headers = { "Content-Type": "application/json" };
-		} else {
-			headers["Content-Type"] = "application/json";
-		}
-		session.postResource(url, headers, JSON.stringify(body));
+		session.postResource(url, headers, body);
 	}
 }
 

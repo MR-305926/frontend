@@ -90,6 +90,9 @@ out
 # Nuxt.js build / generate output
 .nuxt
 dist
+
+# CUSTOM
+# Microsoft Azure Kudu+ zip 2 deploy
 dist.zip
 
 # Gatsby files

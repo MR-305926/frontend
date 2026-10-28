@@ -34,46 +34,64 @@ const signUpFormFailTag = <p>❌📝↔️📝</p>;
  */
 function useSessionManagementResource(resourceUrl, failureCallback) {
 	let navigate = useNavigate();
-	function goHome() { navigate("/") }
+	function goHome() { navigate("/"); }
 	/**
-	 * @type {import("react").SubmitEventHandler<HTMLFormElement>}
+	 * @param {import("react").SubmitEvent<HTMLFormElement>} event
 	 */
-	return function (event) {
-		event.preventDefault();
+	function solver(event) {
 		let form = event.target;
-		let data = new FormData(form);
-		session.postResource(resourceUrl, undefined, data).
+		let formdata = new FormData(form);
+		let data = JSON.stringify({
+			[usernameKey]: formdata.get(usernameKey),
+			[passwordKey]: formdata.get(passwordKey)
+		});
+		session.postResource(resourceUrl, data).
 			then(session.setToken).
 			then(goHome).
 			catch(failureCallback);
 	}
+
+	/**
+	 * @type {import("react").SubmitEventHandler<HTMLFormElement>}
+	 */
+	return async function (event) {
+		event.preventDefault();
+		let sessionIsHealthy = await session.apiIsHealthy();
+		if (sessionIsHealthy) {
+			solver(event);
+		} else {
+			navigate("/error");
+		}
+	}
 }
 
 function generateContent() {
-	const [loginFailed, setLoginFailed] = useState(false);
-	const submitLoginAction = useSessionManagementResource(loginResourceUrl, () => setLoginFailed(true));
-	const [signUpFailed, setSignUpFailed] = useState(false);
-	const submitSignUpAction = useSessionManagementResource(signUpResourceUrl, () => setSignUpFailed(true));
+	return function () {
+		const [loginFailed, setLoginFailed] = useState(false);
+		const submitLoginAction = useSessionManagementResource(loginResourceUrl, () => setLoginFailed(true));
+		const [signUpFailed, setSignUpFailed] = useState(false);
+		const submitSignUpAction = useSessionManagementResource(signUpResourceUrl, () => setSignUpFailed(true));
 
-	return (
-		<div className="half">
-			<form onSubmit={submitLoginAction}>
-				{loginFormContent}
-				{loginFailed && loginFormFailTag}
-			</form>
-			<form onSubmit={submitSignUpAction}>
-				{signUpFormContent}
-				{signUpFailed && signUpFormFailTag}
-			</form>
-		</div>
-	);
+		return (
+			<div className="half">
+				<form onSubmit={submitLoginAction}>
+					{loginFormContent}
+					{loginFailed && loginFormFailTag}
+				</form>
+				<form onSubmit={submitSignUpAction}>
+					{signUpFormContent}
+					{signUpFailed && signUpFormFailTag}
+				</form>
+			</div>
+		);
+	}
 }
 
 function SystemAccessUI() {
 	return (
 		session.hasToken() ?
 			redirect :
-			generateContent()
+			generateContent()()
 	);
 }
 

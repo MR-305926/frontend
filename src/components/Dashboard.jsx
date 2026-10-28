@@ -25,8 +25,8 @@ function Dashboard({ defaultPageSize }) {
 	function toggleForm() { formSetDisplayState(!formDisplayState); }
 
 	/**
-		 * @param {import("react").ChangeEvent<HTMLInputElement, HTMLInputElement>} event
-		 */
+	 * @param {import("react").ChangeEvent<HTMLInputElement, HTMLInputElement>} event
+	 */
 	function updatePageIndex(event) {
 		updateQueryState(new QueryState(queryState.pageSize, event.target.valueAsNumber));
 	}
@@ -54,7 +54,7 @@ function Dashboard({ defaultPageSize }) {
 		));
 	}
 
-	const content = <div></div>;//TODO Table({param}) where param ~= {[key:string]:any}[]
+	const content = <div></div>;//TODO Table({queryState})
 
 	return (
 		<>
