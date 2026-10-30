@@ -1,0 +1,20 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "scan for defects",
+			"type": "shell",
+			"command": "npx eslint > eslint.err",
+			"isBackground": false,
+			"group": {
+				"kind": "none",
+				"isDefault": false
+			},
+			"presentation": {
+				"reveal": "silent",
+				"panel": "dedicated"
+			},
+			"problemMatcher": []
+		}
+	]
+}

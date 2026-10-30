@@ -95,6 +95,10 @@ dist
 # Microsoft Azure Kudu+ zip 2 deploy
 dist.zip
 
+# CUSTOM
+# eslint manual lint output
+eslint.err
+
 # Gatsby files
 .cache/
 # Comment in the public line in if your project uses Gatsby and not Next.js
