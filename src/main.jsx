@@ -29,14 +29,10 @@ import WebApp from "./WebApp.jsx";
 /**
  * @param {import("react-dom/client").Container} main
  */
-function init(main) {
-	/** @type {Promise<void>} */
-	return (new Promise((resolve, reject) => {
-		createRoot(main).render(
-			<StrictMode>
-				<WebApp />
-			</StrictMode>
-		);
-		resolve();
-	}));
+async function init(main) {
+	createRoot(main).render(
+		<StrictMode>
+			<WebApp />
+		</StrictMode>
+	);
 }

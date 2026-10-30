@@ -7,10 +7,6 @@ const toDashboard = <Navigate to={"/dashboard"} />;
 const toSession = <Navigate to={"/session"} />;
 
 function Index() {
-	//TODO remove debugging code
-	console.log(session);
-	console.log(session.hasToken());
-
 	let hasToken = session.hasToken();
 	return hasToken ? toDashboard : toSession;
 }

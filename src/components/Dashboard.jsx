@@ -5,17 +5,29 @@ import { Outlet, useNavigate } from "react-router";
 import emptyStringArray from "../utils/emptyStringArray.js";
 import QueryState from "../utils/QueryState.js";
 import session from "../utils/session.js";
+import LinkPanel from "./LinkPanel.jsx";
+
+function useLogout() {
+	let navigate = useNavigate();
+	return function () {
+		session.clearSession();
+		navigate("/session");
+	}
+}
 
 /**
  * @param {Object} props
  * @param {number} props.defaultPageSize
  */
 function Dashboard({ defaultPageSize }) {
-	{
-		let navigate = useNavigate();
-		if (!session.hasToken()) navigate("/session");
-	}
+	//WARN LinkPanel assumes that it is child of dashboard & dashboard watches out for null sessions
+	let logout = useLogout();
+	if (!session.hasToken()) {
+		//TODO debug
+		console.log("NO TOKEN FOUND");
 
+		logout();
+	}
 	const [queryState, updateQueryState] = useState(new QueryState(defaultPageSize, 1, emptyStringArray()));
 
 	const [linkerDisplayState, linkerSetDisplayState] = useState(true);
@@ -72,7 +84,7 @@ function Dashboard({ defaultPageSize }) {
 				<button id="toggleForm" onClick={toggleForm}>{formDisplayState ? ">" : "<"}</button>
 			</nav>
 			<div>
-				{linkerDisplayState ? <aside id="asideLeft">Hello world!</aside> : ""}
+				{linkerDisplayState ? <LinkPanel logout={logout} /> : ""}
 				{content}
 				{formDisplayState ? <aside id="asideRight"> <Outlet context={[queryState, updateQueryState]} /> </aside> : ""}
 			</div>
