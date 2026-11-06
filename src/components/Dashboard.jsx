@@ -1,14 +1,16 @@
 //@ts-check
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Outlet, useNavigate } from "react-router";
 import emptyStringArray from "../utils/emptyStringArray.js";
 import QueryState from "../utils/QueryState.js";
 import session from "../utils/session.js";
 import LinkPanel from "./LinkPanel.jsx";
 
-function useLogout() {
-	let navigate = useNavigate();
+/**
+ * @param {import("react-router").NavigateFunction} navigate
+ */
+function useLogout(navigate) {
 	return function () {
 		session.clearSession();
 		navigate("/session");
@@ -20,18 +22,21 @@ function useLogout() {
  * @param {number} props.defaultPageSize
  */
 function Dashboard({ defaultPageSize }) {
+	let navigate = useNavigate();
 	//WARN LinkPanel assumes that it is child of dashboard & dashboard watches out for null sessions
-	let logout = useLogout();
-	if (!session.hasToken()) {
-		//TODO debug
-		console.log("NO TOKEN FOUND");
+	let logout = useLogout(navigate);
+	useEffect(() => {
+		if (!session.hasToken()) {
+			//TODO debug
+			console.log("NO TOKEN FOUND");
 
-		logout();
-	}
+			logout();
+		}
+	});
 	const [queryState, updateQueryState] = useState(new QueryState(defaultPageSize, 1, emptyStringArray()));
 
-	const [linkerDisplayState, linkerSetDisplayState] = useState(true);
-	function toggleAside() { linkerSetDisplayState(!linkerDisplayState); }
+	const [linkPanelDisplayState, linkPanelSetDisplayState] = useState(true);
+	function toggleNav() { linkPanelSetDisplayState(!linkPanelDisplayState); }
 
 	const [formDisplayState, formSetDisplayState] = useState(true);
 	function toggleForm() { formSetDisplayState(!formDisplayState); }
@@ -71,20 +76,20 @@ function Dashboard({ defaultPageSize }) {
 	return (
 		<>
 			<nav>
-				<button id="toggleAside" onClick={toggleAside}>{linkerDisplayState ? "<" : ">"}</button>
+				<button id="toggleAside" onClick={toggleNav}>{linkPanelDisplayState ? "<" : ">"}</button>
 				<div>
 					<button onClick={pageIndexBackward}>{"⇐"}</button>
 
 					<input name="pageIndex" type="number" min={1} value={queryState.pageIndex} onChange={updatePageIndex} />
 					<label htmlFor="pageCount">#</label>
-					<input type="number" min={1} value={queryState.pageSize} onChange={updatePageSize} />
+					<input name="pageCount" type="number" min={1} value={queryState.pageSize} onChange={updatePageSize} />
 
 					<button onClick={pageIndexForward}>{"⇒"}</button>
 				</div>
 				<button id="toggleForm" onClick={toggleForm}>{formDisplayState ? ">" : "<"}</button>
 			</nav>
 			<div>
-				{linkerDisplayState ? <LinkPanel logout={logout} /> : ""}
+				{linkPanelDisplayState ? <LinkPanel logout={logout} /> : ""}
 				{content}
 				{formDisplayState ? <aside id="asideRight"> <Outlet context={[queryState, updateQueryState]} /> </aside> : ""}
 			</div>

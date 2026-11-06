@@ -1,44 +1,38 @@
 //@ts-check
 
-import { useNavigate } from "react-router";
+import { Navigate, useNavigate } from "react-router";
+import session from "../utils/session.js";
+import useFetchPost from "../hooks/useFetchPost.js";
 
-/**
- * [0]: label, [1]: url
- */
 function useLinkFactory() {
 	let navigate = useNavigate();
 	/**
-	 * @param {string[]} param
+	 * @param {{label:string,path:string}} param
 	 */
 	return function (param) {
-		return <button onClick={() => navigate(param[1])}>{param[0]}</button>
+		return <button onClick={() => navigate(param.path)}>{param.label}</button>
 	}
 }
 
-//TODO get from backend endpoint
-/**
- * [0]: label, [1]: url
- * @returns {string[][]}
- */
-function getExternalLinks() {
-	let ans = [[""]];
-	ans.pop();
-	return ans;
-}
+const externalLinksUrl = session.apiOrigin() + "/index";
 
+//TODO get links from backend endpoint
 /**
  * @param {Object} props
  * @param {() => void} props.logout
  */
 function LinkPanel({ logout }) {
-	let linkFactory = useLinkFactory();
 	//WARN assumes that it is child of dashboard & dashboard watches out for null sessions
-	let externalLinks = getExternalLinks();
+	let linkFactory = useLinkFactory();
+	//TODO implement real querying
+	let error = false;
+
 	return (
-		<aside id="asideLeft">
-			<button onClick={logout}>⍈</button>
-			{externalLinks.map(linkFactory)}
-		</aside>
+		error ?
+			<Navigate to={"/error"} /> :
+			<aside id="asideLeft">
+				<button onClick={logout}>⍈</button>
+			</aside>
 	);
 }
 

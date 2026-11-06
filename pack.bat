@@ -1,1 +1,0 @@
-CLS & CD dist & tar -a -c -f ../dist.zip * & CD .. & ECHO FINISHED

@@ -4,7 +4,6 @@ import readEnv, { ENVKEY } from "./readEnv.js";
 
 const tokenKey = readEnv(ENVKEY.token_key);
 
-
 /**
  * @param {Object | undefined} body
  */
@@ -100,8 +99,9 @@ class SessionManager {
 	 * @param {string} url
 	 * @param {Object} [body]
 	 * @param {{[k:string]:string}} [headers]
+	 * @param {AbortSignal} [signal]
 	 */
-	postResource(url, body, headers) {
+	postResource(url, body, headers, signal) {
 		return new Promise((resolve, reject) => {
 			function rejector() { reject(); }
 
@@ -126,7 +126,8 @@ class SessionManager {
 				{
 					method: "POST",
 					headers: actualHeaders,
-					body: actualBody
+					body: actualBody,
+					signal: signal
 				}
 			).
 				then(

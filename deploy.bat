@@ -1,0 +1,1 @@
+CLS & XCOPY .\dist ..\bkend\static /s /e /y

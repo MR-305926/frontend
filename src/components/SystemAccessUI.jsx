@@ -1,6 +1,6 @@
 //@ts-check
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Navigate, useNavigate } from "react-router";
 import session from "../utils/session.js";
 
@@ -65,33 +65,34 @@ function useSessionManagementResource(resourceUrl, failureCallback) {
 	}
 }
 
-function generateContent() {
-	return function () {
-		const [loginFailed, setLoginFailed] = useState(false);
-		const submitLoginAction = useSessionManagementResource(loginResourceUrl, () => setLoginFailed(true));
-		const [signUpFailed, setSignUpFailed] = useState(false);
-		const submitSignUpAction = useSessionManagementResource(signUpResourceUrl, () => setSignUpFailed(true));
-
-		return (
-			<div className="half">
-				<form onSubmit={submitLoginAction}>
-					{loginFormContent}
-					{loginFailed && loginFormFailTag}
-				</form>
-				<form onSubmit={submitSignUpAction}>
-					{signUpFormContent}
-					{signUpFailed && signUpFormFailTag}
-				</form>
-			</div>
-		);
-	}
-}
-
 function SystemAccessUI() {
+	let navigate = useNavigate();
+	useEffect(() => {
+		if (session.hasToken()) {
+			navigate("/dashboard");
+		}
+	});
+
+	const [loginFailed, setLoginFailed] = useState(false);
+	const submitLoginAction = useSessionManagementResource(loginResourceUrl, () => setLoginFailed(true));
+	const [signUpFailed, setSignUpFailed] = useState(false);
+	const submitSignUpAction = useSessionManagementResource(signUpResourceUrl, () => setSignUpFailed(true));
+
 	return (
-		session.hasToken() ?
-			redirect :
-			generateContent()()
+		<div className="half">
+			<form onSubmit={submitLoginAction}>
+				<fieldset>
+					{loginFormContent}
+				</fieldset>
+				{loginFailed && loginFormFailTag}
+			</form>
+			<form onSubmit={submitSignUpAction}>
+				<fieldset>
+					{signUpFormContent}
+				</fieldset>
+				{signUpFailed && signUpFormFailTag}
+			</form>
+		</div>
 	);
 }
 

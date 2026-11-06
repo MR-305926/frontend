@@ -1,8 +1,10 @@
 //@ts-check
 
-import { useOutletContext } from "react-router";
+import { useNavigate, useOutletContext } from "react-router";
 import QueryState from "../utils/QueryState.js";
 import FormInput from "./FormInput.jsx";
+import { useState } from "react";
+import session from "../utils/session.js";
 
 //TODO verify that dynamic forms work correctly
 
@@ -14,33 +16,53 @@ import FormInput from "./FormInput.jsx";
  * @param {import("./FormInput.jsx").FormInputGetter[]} getters
  * @param {QueryState} queryState
  * @param {(value:QueryState) => void} updateQueryState
+ * @param {(formDisabled:boolean) => void} setFormDisabled
  */
-function submitForm(getters, queryState, updateQueryState) {
-	return function () {
-		let selector = [];
-		/** @type {import("../utils/QueryState.js").QueryFilter} */
-		let where = [];
-		let buffer;
-		for (let item of getters) {
-			buffer = item();
-			if (buffer.isSelected) selector.push(buffer.name);
-			if (buffer.type != 'number' && buffer.a) {
-				where.push({ name: buffer.name, floor: undefined, roof: undefined, value: buffer.a });
-			} else {
-				where.push({ name: buffer.name, floor: Number(buffer.a), roof: Number(buffer.b), value: undefined });
-			}
-		}
+function useSubmitForm(getters, queryState, updateQueryState, setFormDisabled) {
+	let navigate = useNavigate();
 
-		updateQueryState(new QueryState(queryState.pageSize, queryState.pageIndex, selector, where));
+	/** @type {import("react").SubmitEventHandler<HTMLInputElement>} */
+	return async function (event) {
+		event.preventDefault();
+		event.stopPropagation();
+		setFormDisabled(true);
+		if (await session.apiIsHealthy()) {
+			let selector = [];
+			/** @type {import("../utils/QueryState.js").QueryFilter} */
+			let where = [];
+			let buffer;
+			for (let item of getters) {
+				buffer = item();
+				if (buffer.isSelected) selector.push(buffer.name);
+				if (buffer.type != 'number' && buffer.a) {
+					where.push({ name: buffer.name, floor: undefined, roof: undefined, value: buffer.a });
+				} else {
+					where.push({ name: buffer.name, floor: Number(buffer.a), roof: Number(buffer.b), value: undefined });
+				}
+			}
+
+			updateQueryState(new QueryState(queryState.pageSize, queryState.pageIndex, selector, where));
+			setFormDisabled(false);
+		} else {
+			setFormDisabled(false);
+			navigate("/error");
+		}
 	}
 }
 
 /**
- * @type {import("react").SubmitEventHandler<HTMLFormElement>}
+ * @param {(formDisabled:boolean) => void} setFormDisabled
  */
-function resetForm(event) {
-	event.preventDefault();
-	event.target.reset();
+function resetForm(setFormDisabled) {
+	/**
+	 * @type {import("react").SubmitEventHandler<HTMLFormElement>}
+	 */
+	return function (event) {
+		event.preventDefault();
+		setFormDisabled(true);
+		event.target.reset();
+		setFormDisabled(false);
+	}
 }
 
 /**
@@ -51,6 +73,7 @@ function Form({ fields }) {
 	//WARN: react-router magic
 	// @ts-ignore
 	const [queryState, updateQueryState] = useOutletContext();
+	const [formDisabled, setFormDisabled] = useState(false);
 
 	/** @type {import("./FormInput.jsx").FormInputGetter[]} */
 	let getters = [];
@@ -65,13 +88,21 @@ function Form({ fields }) {
 		}
 	}
 
-	return (
-		<form onSubmit={resetForm}>
-			{elements}
-			<button type="submit">❌</button>
-			<button type="button" onClick={submitForm(getters, queryState, updateQueryState)}>🟢</button>
+	let submitForm = useSubmitForm(getters, queryState, updateQueryState, setFormDisabled);
+
+	//TODO debug
+	//WARN: submitForm stops propagation, only the reset form button propagates towards the reset form function
+	let ans = (
+		<form onSubmit={resetForm(setFormDisabled)}>
+			<fieldset disabled={formDisabled}>
+				{elements}
+				<input type="submit">❌</input>
+				<input type="submit" onSubmit={submitForm}>🟢</input>
+			</fieldset>
 		</form>
 	);
+
+	return ans;
 }
 
 export default Form;

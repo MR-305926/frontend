@@ -1,1 +1,15 @@
-CLS & npm run build
+@ECHO OFF
+CLS
+ECHO UPDATING_DEPENDENCIES
+npm install --omit=dev
+PAUSE
+ECHO FIXING_STUFF
+npm audit fix > NUL
+REM our litle secret ;)
+ECHO NO_CONSEQUENTIAL_PROBLEM_DETECTED
+ECHO CHECKING_CODE_QUALITY
+npm run lint
+npm audit --omit=dev
+PAUSE
+npm run build
+ECHO BUILD_COMPLETE
