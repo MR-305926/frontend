@@ -1,8 +1,10 @@
 //@ts-check
 
 import { Navigate, useNavigate } from "react-router";
-import session from "../utils/session.js";
-import useFetchPost from "../hooks/useFetchPost.js";
+import SESSION from "../utils/SESSION.js";
+import { useQuery } from "@tanstack/react-query";
+
+const externalLinksUrl = SESSION.apiOrigin() + "/index";
 
 function useLinkFactory() {
 	let navigate = useNavigate();
@@ -10,11 +12,30 @@ function useLinkFactory() {
 	 * @param {{label:string,path:string}} param
 	 */
 	return function (param) {
-		return <button onClick={() => navigate(param.path)}>{param.label}</button>
+		return (<li><button onClick={() => navigate(param.path)}>{param.label}</button></li>);
 	}
 }
 
-const externalLinksUrl = session.apiOrigin() + "/index";
+function fetchLinks() {
+	return SESSION.postResource(externalLinksUrl);
+}
+
+function Links() {
+	let linkFactory = useLinkFactory();
+
+	let { data, error, isPending } = useQuery({
+		queryKey: [externalLinksUrl],
+		queryFn: fetchLinks,
+	});
+
+	if (isPending) return <p>Loading...</p>;
+	if (error) return <p>Error: {error.message}</p>;
+	return (
+		isPending ? <p>Loading...</p> :
+			error != null ? <Navigate to={"/error"} /> :
+				data.map(linkFactory)
+	);
+}
 
 //TODO get links from backend endpoint
 /**
@@ -23,16 +44,18 @@ const externalLinksUrl = session.apiOrigin() + "/index";
  */
 function LinkPanel({ logout }) {
 	//WARN assumes that it is child of dashboard & dashboard watches out for null sessions
-	let linkFactory = useLinkFactory();
-	//TODO implement real querying
-	let error = false;
+
+	let links = <Links />;
 
 	return (
-		error ?
-			<Navigate to={"/error"} /> :
-			<aside id="asideLeft">
-				<button onClick={logout}>⍈</button>
-			</aside>
+		<aside id="asideLeft">
+			<ul>
+				<li>
+					<button onClick={logout}>⍈</button>
+				</li>
+				{links}
+			</ul>
+		</aside>
 	);
 }
 

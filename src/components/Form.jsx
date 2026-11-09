@@ -4,7 +4,7 @@ import { useNavigate, useOutletContext } from "react-router";
 import QueryState from "../utils/QueryState.js";
 import FormInput from "./FormInput.jsx";
 import { useState } from "react";
-import session from "../utils/session.js";
+import SESSION from "../utils/SESSION.js";
 
 //TODO verify that dynamic forms work correctly
 
@@ -26,7 +26,7 @@ function useSubmitForm(getters, queryState, updateQueryState, setFormDisabled) {
 		event.preventDefault();
 		event.stopPropagation();
 		setFormDisabled(true);
-		if (await session.apiIsHealthy()) {
+		if (await SESSION.apiIsHealthy()) {
 			let selector = [];
 			/** @type {import("../utils/QueryState.js").QueryFilter} */
 			let where = [];

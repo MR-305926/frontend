@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Outlet, useNavigate } from "react-router";
 import emptyStringArray from "../utils/emptyStringArray.js";
 import QueryState from "../utils/QueryState.js";
-import session from "../utils/session.js";
+import SESSION from "../utils/SESSION.js";
 import LinkPanel from "./LinkPanel.jsx";
 
 /**
@@ -12,7 +12,7 @@ import LinkPanel from "./LinkPanel.jsx";
  */
 function useLogout(navigate) {
 	return function () {
-		session.clearSession();
+		SESSION.clearSession();
 		navigate("/session");
 	}
 }
@@ -22,14 +22,12 @@ function useLogout(navigate) {
  * @param {number} props.defaultPageSize
  */
 function Dashboard({ defaultPageSize }) {
-	let navigate = useNavigate();
 	//WARN LinkPanel assumes that it is child of dashboard & dashboard watches out for null sessions
-	let logout = useLogout(navigate);
+	let logout = useLogout(useNavigate());
 	useEffect(() => {
-		if (!session.hasToken()) {
+		if (!SESSION.hasToken()) {
 			//TODO debug
 			console.log("NO TOKEN FOUND");
-
 			logout();
 		}
 	});

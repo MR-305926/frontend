@@ -1,13 +1,13 @@
 //@ts-check
 
 import { Navigate } from "react-router";
-import session from "../utils/session";
+import SESSION from "../utils/SESSION.js";
 
 const toDashboard = <Navigate to={"/dashboard"} />;
 const toSession = <Navigate to={"/session"} />;
 
 function Index() {
-	let hasToken = session.hasToken();
+	let hasToken = SESSION.hasToken();
 	return hasToken ? toDashboard : toSession;
 }
 

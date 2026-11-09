@@ -1,6 +1,6 @@
 //@ts-check
 
-import session from "./session.js";
+import SESSION from "./SESSION.js";
 
 /**
  * @typedef {{name:string,floor:number|undefined,roof:number|undefined,value:string|undefined}[]} QueryFilter
@@ -51,7 +51,7 @@ class QueryState {
 		if (this.#filter != undefined) body["where"] = this.#filter;
 		body["skip"] = this.#pageIndex * this.#pageSize;
 		body["amount"] = this.pageSize;
-		session.postResource(url, headers, body);
+		SESSION.postResource(url, headers, body);
 	}
 }
 

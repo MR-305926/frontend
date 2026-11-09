@@ -2,40 +2,39 @@
 
 import readEnv, { ENVKEY } from "./readEnv.js";
 
-const tokenKey = readEnv(ENVKEY.token_key);
-
 /**
- * @param {Object | undefined} body
+ * @param {Object} body
  */
 function bodyStringify(body) {
-	let wrongString = JSON.stringify(body);
+	let value = JSON.stringify(body);
 	//TODO cleanup
-	wrongString = wrongString.
-		slice(1, wrongString.length - 1).
+	value = value.
+		//slice(1, value.length - 1).
 		//replaceAll("\":", ":").
 		//replaceAll(",\"", ",").
 		//replaceAll("{\"", "{").
 		replaceAll("\\\"", "\"");
-	return wrongString;
+	return value;
 }
 
 class SessionManager {
-	constructor() { }
+	/** @type {string|null} */
+	#token;
+	constructor() {
+		this.#token = null;
+	}
 
 	/**
 	 * @param {string} token
 	 */
 	setToken(token) {
-		//TODO remove temp debug code
-		//WARN temp debug code
-		console.log(token);
-
-		sessionStorage.setItem(tokenKey, token);
+		this.#token = token;
 	}
 	#getToken() {
-		return sessionStorage.getItem(tokenKey);
+		return this.#token;
 	}
 	clearSession() {
+		this.#token = null;
 		sessionStorage.clear();
 	}
 	hasToken() {
@@ -45,9 +44,10 @@ class SessionManager {
 	apiOrigin() {
 		return readEnv(ENVKEY.api_origin);
 	}
+	/** @returns {Promise<boolean>} */
 	apiIsHealthy() {
 		return new Promise((resolve) => {
-			fetch(this.apiOrigin()).
+			fetch(this.apiOrigin() + "/health", { method: "HEAD" }).
 				then(
 					(value) => resolve(value.ok),
 					() => resolve(false)
@@ -103,8 +103,6 @@ class SessionManager {
 	 */
 	postResource(url, body, headers, signal) {
 		return new Promise((resolve, reject) => {
-			function rejector() { reject(); }
-
 			let actualHeaders = new Headers();
 			{
 				if (headers != undefined) {
@@ -119,7 +117,7 @@ class SessionManager {
 				}
 			}
 
-			let actualBody = bodyStringify(body);
+			let actualBody = (body != undefined ? bodyStringify(body) : body);
 
 			fetch(
 				url,
@@ -131,18 +129,18 @@ class SessionManager {
 				}
 			).
 				then(
-					(response) => response.ok ? response.json() : reject(),
-					rejector
+					(response) => response.ok ? response.json() : reject(response),
+					reject
 				).
 				then(
 					resolve,
-					rejector
+					reject
 				);
 		});
 	}
 }
 
-const fetchForMe = new SessionManager();
+const SessionManagerInstance = new SessionManager();
 
-export default fetchForMe;
+export default SessionManagerInstance;
 
