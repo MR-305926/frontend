@@ -7,7 +7,7 @@ import { useState } from "react";
 
 /**
  * @param {Object} props
- * @param {import("./Form").FormFieldSchema} props.param
+ * @param {import("./OldForm").FormFieldSchema} props.param
  * @param {FormInputGetter[]} props.gettersPointer
  */
 function FormInput({ param, gettersPointer }) {

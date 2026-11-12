@@ -2,12 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
-import SESSION from "../utils/SESSION.js";
 
 const usernameKey = "username";
 const passwordKey = "password";
 
-const loginResourceUrl = SESSION.apiOrigin() + "/login";
 const loginFormContent = (
 	<>
 		<input name={usernameKey} type="text" placeholder="usuario" />
@@ -17,7 +15,6 @@ const loginFormContent = (
 );
 const loginFormFailTag = <p>🗝❌🔒</p>
 
-const signUpResourceUrl = SESSION.apiOrigin() + "/signUp";
 const signUpFormContent = (
 	<>
 		<input name={usernameKey} type="text" placeholder="usuario" />
@@ -28,10 +25,11 @@ const signUpFormContent = (
 const signUpFormFailTag = <p>❌📝↔️📝</p>;
 
 /**
+ * @param {import("../utils/SessionManager.js").default} session
  * @param {string} resourceUrl
  * @param {(reason: any) => void} failureCallback
  */
-function useSessionManagementResource(resourceUrl, failureCallback) {
+function useSessionManagementResource(session, resourceUrl, failureCallback) {
 	let navigate = useNavigate();
 	function goHome() { navigate("/"); }
 	/**
@@ -45,8 +43,8 @@ function useSessionManagementResource(resourceUrl, failureCallback) {
 			[passwordKey]: formdata.get(passwordKey)
 		});
 
-		SESSION.postResource(resourceUrl, data).
-			then((ans) => SESSION.setToken(ans.value)).
+		session.postResource(resourceUrl, data).
+			then((ans) => session.setToken(ans.value)).
 			then(goHome).
 			catch(failureCallback);
 	}
@@ -56,7 +54,7 @@ function useSessionManagementResource(resourceUrl, failureCallback) {
 	 */
 	return async function (event) {
 		event.preventDefault();
-		let sessionIsHealthy = await SESSION.apiIsHealthy();
+		let sessionIsHealthy = await session.apiIsHealthy();
 		if (sessionIsHealthy) {
 			solver(event);
 		} else {
@@ -65,18 +63,24 @@ function useSessionManagementResource(resourceUrl, failureCallback) {
 	}
 }
 
-function SystemAccessUI() {
+/**
+ * @param {Object} props
+ * @param {import("../utils/SessionManager.js").default} props.session
+ */
+function SystemAccessUI({ session }) {
 	let navigate = useNavigate();
 	useEffect(() => {
-		if (SESSION.hasToken()) {
+		if (session.hasToken()) {
 			navigate("/dashboard");
 		}
 	});
 
+	const loginResourceUrl = session.apiOrigin() + "/login";
 	const [loginFailed, setLoginFailed] = useState(0);
-	const submitLoginAction = useSessionManagementResource(loginResourceUrl, () => setLoginFailed(loginFailed + 1));
+	const submitLoginAction = useSessionManagementResource(session, loginResourceUrl, () => setLoginFailed(loginFailed + 1));
+	const signUpResourceUrl = session.apiOrigin() + "/signUp";
 	const [signUpFailed, setSignUpFailed] = useState(0);
-	const submitSignUpAction = useSessionManagementResource(signUpResourceUrl, () => setSignUpFailed(signUpFailed + 1));
+	const submitSignUpAction = useSessionManagementResource(session, signUpResourceUrl, () => setSignUpFailed(signUpFailed + 1));
 
 	return (
 		<div className="half">

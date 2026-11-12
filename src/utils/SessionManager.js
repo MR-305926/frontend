@@ -142,5 +142,5 @@ class SessionManager {
 
 const SessionManagerInstance = new SessionManager();
 
-export default SessionManagerInstance;
-
+export default SessionManager;
+export { SessionManagerInstance };

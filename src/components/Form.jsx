@@ -1,110 +1,56 @@
 //@ts-check
 
-import { useNavigate, useOutletContext } from "react-router";
-import QueryState from "../utils/QueryState.js";
-import FormInput from "./FormInput.jsx";
-import { useState } from "react";
-import SESSION from "../utils/SESSION.js";
-
-//TODO verify that dynamic forms work correctly
-
-/**@typedef {{label:string,type:("string"|"number"),min:string,max:string,value:string}} FormFieldSchema */
-
-/** @typedef {({name:string,}|{name:string,})} API_whereClause */
+import { joiResolver } from "@hookform/resolvers/joi";
+import FormParam from "../utils/FormParam";
+import { useForm } from "react-hook-form";
+import spaJoi from "../assets/spaJoi.js";
+import { useContext } from "react";
+import { useOutletContext } from "react-router";
+import PaginationState from "../utils/PaginationState.js";
 
 /**
- * @param {import("./FormInput.jsx").FormInputGetter[]} getters
- * @param {QueryState} queryState
- * @param {(value:QueryState) => void} updateQueryState
- * @param {(formDisabled:boolean) => void} setFormDisabled
+ * @param {import("react-hook-form").FormState<import("react-hook-form").FieldValues>} formState
+ * @param {import("react-hook-form").UseFormRegister<import("react-hook-form").FieldValues>} register
  */
-function useSubmitForm(getters, queryState, updateQueryState, setFormDisabled) {
-	let navigate = useNavigate();
-
-	/** @type {import("react").SubmitEventHandler<HTMLInputElement>} */
-	return async function (event) {
-		event.preventDefault();
-		event.stopPropagation();
-		setFormDisabled(true);
-		if (await SESSION.apiIsHealthy()) {
-			let selector = [];
-			/** @type {import("../utils/QueryState.js").QueryFilter} */
-			let where = [];
-			let buffer;
-			for (let item of getters) {
-				buffer = item();
-				if (buffer.isSelected) selector.push(buffer.name);
-				if (buffer.type != 'number' && buffer.a) {
-					where.push({ name: buffer.name, floor: undefined, roof: undefined, value: buffer.a });
-				} else {
-					where.push({ name: buffer.name, floor: Number(buffer.a), roof: Number(buffer.b), value: undefined });
-				}
-			}
-
-			updateQueryState(new QueryState(queryState.pageSize, queryState.pageIndex, selector, where));
-			setFormDisabled(false);
-		} else {
-			setFormDisabled(false);
-			navigate("/error");
-		}
-	}
-}
-
-/**
- * @param {(formDisabled:boolean) => void} setFormDisabled
- */
-function resetForm(setFormDisabled) {
-	/**
-	 * @type {import("react").SubmitEventHandler<HTMLFormElement>}
-	 */
-	return function (event) {
-		event.preventDefault();
-		setFormDisabled(true);
-		event.target.reset();
-		setFormDisabled(false);
+function useFieldFactory(formState, register) {
+	/** @param {{alias: string,name: string,type: string}} input */
+	return function (input) {
+		return (
+			<>
+				<label key={"label_" + input.name} htmlFor={input.name}>{input.alias}</label>
+				<input key={"input_" + input.name} type={input.type} {...register(input.name)} />
+				<p key={"warn_" + input.name}>{(formState.errors[input.name]?.message ?? "").toString()}</p>
+			</>
+		);
 	}
 }
 
 /**
  * @param {Object} props
- * @param {FormFieldSchema[]} props.fields
+ * @param {FormParam} props.param
  */
-function Form({ fields }) {
-	//WARN: react-router magic
-	// @ts-ignore
-	const [queryState, updateQueryState] = useOutletContext();
-	const [formDisabled, setFormDisabled] = useState(false);
+function Form({ param }) {
+	let { register, handleSubmit, formState } = useForm({
+		resolver: joiResolver(param.schema(), {
+			messages: spaJoi
+		})
+	});
 
-	/** @type {import("./FormInput.jsx").FormInputGetter[]} */
-	let getters = [];
-	let elements = [];
-	{
-		let item;
-		let buffer;
-		for (let i = 0, length = fields.length; i < length; i++) {
-			item = fields[i];
-			buffer = <FormInput key={i} param={item} gettersPointer={getters} />;
-			elements.push(buffer);
-		}
-	}
+	let fieldFactory = useFieldFactory(formState, register);
 
-	let submitForm = useSubmitForm(getters, queryState, updateQueryState, setFormDisabled);
+	//WARN react router magic
+	/** 
+	 * @type {{paginationState:PaginationState}}
+	 */
+	let { paginationState } = useOutletContext();
+	let handler = param.handler()(paginationState);
 
-	//TODO debug
-	//WARN: submitForm stops propagation, only the reset form button propagates towards the reset form function
-	let ans = (
-		<form onSubmit={resetForm(setFormDisabled)}>
-			<fieldset disabled={formDisabled}>
-				{elements}
-				<input type="submit">❌</input>
-				<input type="submit" onSubmit={submitForm}>🟢</input>
-			</fieldset>
+	return (
+		<form onSubmit={handleSubmit(handler)}>
+			{param.fields().map(fieldFactory)}
+			<button type={"submit"}>⌯⌲</button>
 		</form>
-	);
-
-	return ans;
+	)
 }
 
 export default Form;
-
-

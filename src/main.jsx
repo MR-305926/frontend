@@ -6,6 +6,7 @@ import "./index.css";
 import { StrictMode } from "react";
 import { createRoot } from 'react-dom/client';
 import WebApp from "./WebApp.jsx";
+import { SessionManagerInstance } from "./utils/SessionManager.js";
 
 //WARN closure permits unloading of candidates when action target is found
 {
@@ -13,7 +14,7 @@ import WebApp from "./WebApp.jsx";
 	if (rootCandidates.length == 1) {
 		const main = rootCandidates.item(0);
 		if (main != null) {
-			init(main);
+			init(main, SessionManagerInstance);
 		}
 	} else {
 		if (rootCandidates.length > 1) {
@@ -28,11 +29,12 @@ import WebApp from "./WebApp.jsx";
 
 /**
  * @param {import("react-dom/client").Container} main
+ * @param {import("./utils/SessionManager.js").default} session
  */
-async function init(main) {
+async function init(main, session) {
 	createRoot(main).render(
 		<StrictMode>
-			<WebApp />
+			<WebApp session={session} />
 		</StrictMode>
 	);
 }

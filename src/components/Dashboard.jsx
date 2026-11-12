@@ -1,97 +1,70 @@
 //@ts-check
 
 import { useEffect, useState } from "react";
-import { Outlet, useNavigate } from "react-router";
-import emptyStringArray from "../utils/emptyStringArray.js";
-import QueryState from "../utils/QueryState.js";
-import SESSION from "../utils/SESSION.js";
+import { Navigate, useNavigate } from "react-router";
+import PaginationState from "../utils/PaginationState.js";
+import FormParam from "../utils/FormParam.js";
 import LinkPanel from "./LinkPanel.jsx";
+import { useQuery } from "@tanstack/react-query";
+import DashboardNav from "./DashboardNav.jsx";
+import FormPanel from "./FormPanel.jsx";
 
 /**
  * @param {import("react-router").NavigateFunction} navigate
+ * @param {import("../utils/SessionManager.js").default} session
  */
-function useLogout(navigate) {
+function useLogout(navigate, session) {
 	return function () {
-		SESSION.clearSession();
+		session.clearSession();
 		navigate("/session");
 	}
 }
 
 /**
+ * @param {import("../utils/SessionManager.js").default} session
+ */
+function useFetchLinkData(session) {
+	let url = session.apiOrigin() + "/index";
+	let action = (() => session.postResource(url));
+	return useQuery({
+		queryKey: [url],
+		queryFn: action,
+	});
+}
+
+/**
  * @param {Object} props
+ * @param {import("../utils/SessionManager.js").default} props.session
  * @param {number} props.defaultPageSize
  */
-function Dashboard({ defaultPageSize }) {
+function Dashboard({ session, defaultPageSize }) {
 	//WARN LinkPanel assumes that it is child of dashboard & dashboard watches out for null sessions
-	let logout = useLogout(useNavigate());
-	useEffect(() => {
-		if (!SESSION.hasToken()) {
-			//TODO debug
-			console.log("NO TOKEN FOUND");
-			logout();
-		}
-	});
-	const [queryState, updateQueryState] = useState(new QueryState(defaultPageSize, 1, emptyStringArray()));
+	let logout = useLogout(useNavigate(), session);
+
+	const [paginationState, updatePaginationState] = useState(new PaginationState(defaultPageSize, 1));
+	const [formParam, updateFormParam] = useState(new FormParam({}, () => () => { return; }));
 
 	const [linkPanelDisplayState, linkPanelSetDisplayState] = useState(true);
-	function toggleNav() { linkPanelSetDisplayState(!linkPanelDisplayState); }
+	function toggleLinkPanel() { linkPanelSetDisplayState(!linkPanelDisplayState); }
 
 	const [formDisplayState, formSetDisplayState] = useState(true);
 	function toggleForm() { formSetDisplayState(!formDisplayState); }
 
-	/**
-	 * @param {import("react").ChangeEvent<HTMLInputElement, HTMLInputElement>} event
-	 */
-	function updatePageIndex(event) {
-		updateQueryState(new QueryState(queryState.pageSize, event.target.valueAsNumber));
-	}
+	let queryFetchLinkData = useFetchLinkData(session);
 
-	/**
-	 * @param {import("react").ChangeEvent<HTMLInputElement, HTMLInputElement>} event
-	 */
-	function updatePageSize(event) {
-		updateQueryState(new QueryState(event.target.valueAsNumber, queryState.pageIndex));
-	}
-
-	function pageIndexForward() {
-		updateQueryState(new QueryState(
-			queryState.pageSize,
-			queryState.pageIndex + 1,
-			queryState.getCopyOfSelector(),
-			queryState.getCopyOfFilter()
-		));
-	}
-
-	function pageIndexBackward() {
-		updateQueryState(new QueryState(
-			queryState.pageSize,
-			queryState.pageIndex > 1 ? queryState.pageIndex - 1 : 1
-		));
-	}
-
-	const content = <div></div>;//TODO Table({queryState})
+	const content = <div></div>;//TODO Table({blah})
 
 	return (
-		<>
-			<nav>
-				<button id="toggleAside" onClick={toggleNav}>{linkPanelDisplayState ? "<" : ">"}</button>
+		!session.hasToken() ?
+			<Navigate to={"/session"} /> :
+			<>
+				<DashboardNav paginationState={paginationState} updatePaginationState={updatePaginationState} linkPanelDisplayState={linkPanelDisplayState} toggleLinkPanel={toggleLinkPanel} formDisplayState={formDisplayState} toggleForm={toggleForm} />
 				<div>
-					<button onClick={pageIndexBackward}>{"⇐"}</button>
-
-					<input name="pageIndex" type="number" min={1} value={queryState.pageIndex} onChange={updatePageIndex} />
-					<label htmlFor="pageCount">#</label>
-					<input name="pageCount" type="number" min={1} value={queryState.pageSize} onChange={updatePageSize} />
-
-					<button onClick={pageIndexForward}>{"⇒"}</button>
+					<LinkPanel visible={linkPanelDisplayState} queryFetchLinks={queryFetchLinkData} formParam={formParam} updateFormParam={updateFormParam} logout={logout} />
+					{content}
+					<FormPanel formDisplayState={formDisplayState} formContext={{ paginationState }} />
 				</div>
-				<button id="toggleForm" onClick={toggleForm}>{formDisplayState ? ">" : "<"}</button>
-			</nav>
-			<div>
-				{linkPanelDisplayState ? <LinkPanel logout={logout} /> : ""}
-				{content}
-				{formDisplayState ? <aside id="asideRight"> <Outlet context={[queryState, updateQueryState]} /> </aside> : ""}
-			</div>
-		</>
+			</>
 	);
 }
 
