@@ -6,8 +6,6 @@ import { useForm } from "react-hook-form";
 import spaJoi from "../assets/spaJoi.js";
 import { useOutletContext } from "react-router";
 import PaginationState from "../utils/PaginationState.js";
-import { useEffect } from "react";
-
 
 /**@typedef {{session:import("../utils/SessionManager.js").default,paginationState:PaginationState, updatePaginationState:(value:import("../utils/PaginationState").default) => void,consumer:import("react").Dispatch<import("react").SetStateAction<{[k:string]:string}[]>>}} FormContext */
 
@@ -21,7 +19,11 @@ function useFieldFactory(formState, register) {
 		return (
 			<>
 				<label key={"label_" + input.name} htmlFor={input.name}>{input.alias}</label>
-				<input key={"input_" + input.name} type={input.type} value={input.type == FieldType.CHECKBOX ? "true" : ""} {...register(input.name)} />
+				{
+					input.type == FieldType.CHECKBOX ?
+						<input key={"input_" + input.name} type={input.type} value={input.type == FieldType.CHECKBOX ? "true" : ""} {...register(input.name)} /> :
+						<input key={"input_" + input.name} type={input.type} {...register(input.name)} />
+				}
 				<p key={"warn_" + input.name}>{(formState.errors[input.name]?.message ?? "").toString()}</p>
 			</>
 		);

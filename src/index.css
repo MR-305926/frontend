@@ -135,7 +135,7 @@ main>div>div {
 }
 
 main>nav {
-	display: flex;
+	display: table;
 	z-index: 1;
 	overflow: scroll;
 }

@@ -40,6 +40,8 @@ function DashboardNav({ paginationState: paginationState, updatePaginationState:
 		));
 	}
 
+	//TODO cleanup
+
 	return (
 		<nav>
 			<button id="toggleAside" onClick={toggleLinkPanel}>{linkPanelDisplayState ? "<" : ">"}</button>
