@@ -39,8 +39,8 @@ function WebApp({ session }) {
 									"min": 3,
 									"required": null
 								})
-							}, (data) => {
-								console.log(data)
+							}, (paginationState) => (data) => {
+								console.log(paginationState, data)
 							})} />}
 						/>
 					</Route>
