@@ -43,6 +43,7 @@ function DashboardNav({ paginationState: paginationState, updatePaginationState:
 	return (
 		<nav>
 			<button id="toggleAside" onClick={toggleLinkPanel}>{linkPanelDisplayState ? "<" : ">"}</button>
+			{/*
 			<div>
 				<button onClick={pageIndexBackward}>{"⇐"}</button>
 
@@ -52,6 +53,7 @@ function DashboardNav({ paginationState: paginationState, updatePaginationState:
 
 				<button onClick={pageIndexForward}>{"⇒"}</button>
 			</div>
+			*/}
 			<button id="toggleForm" onClick={toggleForm}>{formDisplayState ? ">" : "<"}</button>
 		</nav>
 	);

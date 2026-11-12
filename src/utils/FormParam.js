@@ -3,31 +3,27 @@
 import Joi from "joi";
 import PaginationState from "./PaginationState";
 
-const JoiTypes = Joi.types();
+/**@enum {string} */
+const FieldType = {
+	TEXT: "text",
+	NUMBER: "number",
+	DATE: "date",
+	CHECKBOX: "checkbox"
+};
 
-/**@typedef {{[name:string]:{alias:string,type:string,rules:{[k:string]:any}}}} FormSchema */
+/** @typedef {{[name:string]:{alias:string,type:FieldType,rules?:(import("joi").AnySchema)}}} FormSchema */
 
 /**
  * @param {FormSchema} rawSchema
  * @returns {import("joi").ObjectSchema}
  */
 function parseSchema(rawSchema) {
-	let fieldSchema;
 	let partialSchema = Object({});
+	let rules;
 	for (let [name, constraints] of Object.entries(rawSchema)) {
-		//WARN magic read
-		// @ts-ignore
-		fieldSchema = JoiTypes[constraints.type];
-		for (let [rule, param] of Object.entries(constraints.rules)) {
-			if (param != undefined) {
-				if (param != null) {
-					fieldSchema = fieldSchema[rule](param);
-				} else {
-					fieldSchema = fieldSchema[rule]();
-				}
-			}
-		}
-		partialSchema[name] = fieldSchema.label(constraints.alias);
+		rules = constraints.rules;
+		if (rules == undefined) rules = Joi.any();
+		partialSchema[name] = rules.label(constraints.alias);
 	}
 	return Joi.object(partialSchema);
 }
@@ -37,15 +33,8 @@ function parseSchema(rawSchema) {
  */
 function genFields(schema) {
 	let ans = [];
-	let type;
 	for (let [name, constraints] of Object.entries(schema)) {
-		//TODO maybe don't trust Hapi.dev's judgment so much?
-		//WARN assumes that the input type and corresponding joi schema type match in name
-		switch (constraints.type) {
-			case "string": type = "text"; break;
-			default: type = constraints.type;
-		}
-		ans.push({ alias: constraints.alias, name: name, type: type });
+		ans.push({ alias: constraints.alias, name: name, type: constraints.type });
 	}
 	return ans;
 }
@@ -56,7 +45,7 @@ class FormParam {
 	#handler;
 	/**
 	 * @param {FormSchema} schema
-	 * @param {(paginationState:PaginationState) => import("react-hook-form").SubmitHandler<import("react-hook-form").FieldValues, void>} handler
+	 * @param {(session:import("../utils/SessionManager").default, paginationState:PaginationState, consumer:import("react").Dispatch<import("react").SetStateAction<Record<string,string>[]>>) => import("react-hook-form").SubmitHandler<import("react-hook-form").FieldValues, void>} handler
 	 */
 	constructor(schema, handler) {
 		this.#validator = parseSchema(schema);
@@ -78,3 +67,4 @@ class FormParam {
 }
 
 export default FormParam;
+export { FieldType };

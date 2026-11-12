@@ -8,6 +8,7 @@ import LinkPanel from "./LinkPanel.jsx";
 import { useQuery } from "@tanstack/react-query";
 import DashboardNav from "./DashboardNav.jsx";
 import FormPanel from "./FormPanel.jsx";
+import Table from "./Table.jsx";
 
 /**
  * @param {import("react-router").NavigateFunction} navigate
@@ -52,7 +53,10 @@ function Dashboard({ session, defaultPageSize }) {
 
 	let queryFetchLinkData = useFetchLinkData(session);
 
-	const content = <div></div>;//TODO Table({blah})
+	let [content, updateContent] = useState(Object({}));
+
+	/** @type {import("./Form.jsx").FormContext} */
+	const context = { session, paginationState, updatePaginationState, consumer: updateContent };
 
 	return (
 		!session.hasToken() ?
@@ -61,8 +65,8 @@ function Dashboard({ session, defaultPageSize }) {
 				<DashboardNav paginationState={paginationState} updatePaginationState={updatePaginationState} linkPanelDisplayState={linkPanelDisplayState} toggleLinkPanel={toggleLinkPanel} formDisplayState={formDisplayState} toggleForm={toggleForm} />
 				<div>
 					<LinkPanel visible={linkPanelDisplayState} queryFetchLinks={queryFetchLinkData} formParam={formParam} updateFormParam={updateFormParam} logout={logout} />
-					{content}
-					<FormPanel formDisplayState={formDisplayState} formContext={{ paginationState }} />
+					<Table content={content} />
+					<FormPanel formDisplayState={formDisplayState} formContext={context} />
 				</div>
 			</>
 	);

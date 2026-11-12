@@ -7,6 +7,7 @@ import Index from "./components/Index.jsx";
 import SystemAccessUI from "./components/SystemAccessUI.jsx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import FormParam from "./utils/FormParam.js";
+import formDictionary from "./forms/formDictionary.js";
 
 const queryClient = new QueryClient();
 
@@ -33,16 +34,7 @@ function WebApp({ session }) {
 					<Route path="session" element={<SystemAccessUI session={session} />} />
 					<Route path="error" element={<p>An unexpected error has been found</p>} />
 					<Route path="dashboard" element={<Dashboard session={session} defaultPageSize={10} />}>
-						<Route path="bookGet" element={<Form param={
-							new FormParam({
-								"name": field("nombre", "string", {
-									"min": 3,
-									"required": null
-								})
-							}, (paginationState) => (data) => {
-								console.log(paginationState, data)
-							})} />}
-						/>
+						<Route path="bookGet" element={<Form param={formDictionary["bookGet"]} />} />
 					</Route>
 				</Routes>
 			</BrowserRouter>

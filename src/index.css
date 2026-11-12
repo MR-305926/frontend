@@ -136,6 +136,13 @@ main>div>div {
 
 main>nav {
 	display: flex;
+	z-index: 1;
+	overflow: scroll;
+}
+
+main>nav>*:nth-child(2) {
+	position: absolute;
+	right: 0;
 }
 
 main>nav>div {
@@ -152,6 +159,10 @@ aside {
 	display: inline flow-root;
 	border-top: 1px solid;
 	padding: 1vw;
+	z-index: 1;
+	background-color: var(--bg);
+	position: fixed;
+	min-height: 100%;
 }
 
 .half {
@@ -181,4 +192,5 @@ aside {
 
 #asideRight {
 	border-left: 1px solid;
+	right: 0;
 }
