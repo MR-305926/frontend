@@ -39,6 +39,7 @@ function WebApp({ session }) {
 					<Route path="session" element={<SystemAccessUI session={session} />} />
 					<Route path="error" element={<p>An unexpected error has been found</p>} />
 					<Route path="dashboard" element={<Dashboard session={session} defaultPageSize={10} />}>
+						<Route path="" element={<p>Seleccione una acción en el panel desplegable de la izquierda</p>} />
 						{routes}
 					</Route>
 				</Routes>
