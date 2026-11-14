@@ -73,7 +73,7 @@ class SessionManager {
 				actualHeaders.set("Content-Type", "application/json");
 				let token = this.#getToken();
 				if (token != null) {
-					actualHeaders.set("Authorization", token);
+					actualHeaders.set("Authorization", "Bearer " + token);
 				}
 			}
 
@@ -113,7 +113,7 @@ class SessionManager {
 				actualHeaders.set("Content-Type", "application/json");
 				let token = this.#getToken();
 				if (token != null) {
-					actualHeaders.set("Authorization", token);
+					actualHeaders.set("Authorization", "Bearer " + token);
 				}
 			}
 

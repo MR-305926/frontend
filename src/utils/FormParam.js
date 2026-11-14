@@ -6,6 +6,7 @@ import PaginationState from "./PaginationState";
 /**@enum {string} */
 const FieldType = {
 	TEXT: "text",
+	PASSWORD: "password",
 	NUMBER: "number",
 	DATE: "date",
 	CHECKBOX: "checkbox"
@@ -45,7 +46,7 @@ class FormParam {
 	#handler;
 	/**
 	 * @param {FormSchema} schema
-	 * @param {(session:import("../utils/SessionManager").default, paginationState:PaginationState, consumer:import("react").Dispatch<import("react").SetStateAction<Record<string,string>[]>>) => import("react-hook-form").SubmitHandler<import("react-hook-form").FieldValues, void>} handler
+	 * @param {(session:import("../utils/SessionManager").default, paginationState:PaginationState, consumer:import("react").Dispatch<import("react").SetStateAction<Record<string,string>[]>>,navigate:import("react-router").NavigateFunction) => import("react-hook-form").SubmitHandler<import("react-hook-form").FieldValues, void>} handler
 	 */
 	constructor(schema, handler) {
 		this.#validator = parseSchema(schema);

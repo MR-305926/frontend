@@ -7,7 +7,7 @@ import spaJoi from "../assets/spaJoi.js";
 import { useOutletContext } from "react-router";
 import PaginationState from "../utils/PaginationState.js";
 
-/**@typedef {{session:import("../utils/SessionManager.js").default,paginationState:PaginationState, updatePaginationState:(value:import("../utils/PaginationState").default) => void,consumer:import("react").Dispatch<import("react").SetStateAction<{[k:string]:string}[]>>}} FormContext */
+/**@typedef {{session:import("../utils/SessionManager.js").default,paginationState:PaginationState, updatePaginationState:(value:import("../utils/PaginationState").default) => void,consumer:import("react").Dispatch<import("react").SetStateAction<{[k:string]:string}[]>>,navigate:import("react-router").NavigateFunction}} FormContext */
 
 /**
  * @param {import("react-hook-form").FormState<import("react-hook-form").FieldValues>} formState
@@ -35,7 +35,7 @@ function useFieldFactory(formState, register) {
  * @param {FormParam} props.param
  */
 function Form({ param }) {
-	let { register, handleSubmit, formState, watch } = useForm({
+	let { register, handleSubmit, formState } = useForm({
 		resolver: joiResolver(param.schema(), {
 			messages: spaJoi
 		})
@@ -48,8 +48,8 @@ function Form({ param }) {
 	/** 
 	 * @type {FormContext}
 	 */
-	let { session, paginationState, updatePaginationState, consumer } = useOutletContext();
-	let handler = param.handler()(session, paginationState, consumer);
+	let { session, paginationState, updatePaginationState, consumer, navigate } = useOutletContext();
+	let handler = param.handler()(session, paginationState, consumer, navigate);
 
 	/**
 	 * @param {import("react").ChangeEvent<HTMLInputElement, HTMLInputElement>} event

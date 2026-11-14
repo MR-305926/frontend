@@ -25,6 +25,11 @@ function field(alias, type, rules) {
  * @param {import("./utils/SessionManager.js").default} props.session
  */
 function WebApp({ session }) {
+	let routes = Object.
+		keys(formDictionary).
+		map((k) => {
+			return <Route path={k} element={<Form param={formDictionary[k]} />} />
+		});
 	//TODO proper error component
 	return (
 		<QueryClientProvider client={queryClient}>
@@ -34,7 +39,7 @@ function WebApp({ session }) {
 					<Route path="session" element={<SystemAccessUI session={session} />} />
 					<Route path="error" element={<p>An unexpected error has been found</p>} />
 					<Route path="dashboard" element={<Dashboard session={session} defaultPageSize={10} />}>
-						<Route path="bookGet" element={<Form param={formDictionary["bookGet"]} />} />
+						{routes}
 					</Route>
 				</Routes>
 			</BrowserRouter>
