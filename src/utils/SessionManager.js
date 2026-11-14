@@ -17,6 +17,13 @@ function bodyStringify(body) {
 	return value;
 }
 
+/**
+ * @param {number} status
+ */
+function responseAllRight(status) {
+	return (status > 199 && status < 300);
+}
+
 class SessionManager {
 	/** @type {string|null} */
 	#token;
@@ -85,7 +92,7 @@ class SessionManager {
 				}
 			).
 				then(
-					(response) => response.ok ? response.json() : reject(),
+					(response) => responseAllRight(response.status) ? response.json() : reject(),
 					rejector
 				).
 				then(
@@ -129,11 +136,23 @@ class SessionManager {
 				}
 			).
 				then(
-					(response) => response.ok ? response.json() : reject(response),
-					reject
-				).
-				then(
-					resolve,
+					(response) => {
+						if (responseAllRight(response.status)) {
+							if (response.status != 204) {
+								response.json().then(
+									(value) => resolve(value),
+									(reason) => {
+										console.error(response);
+										reject(reason);
+									}
+								);
+							} else {
+								resolve({});
+							}
+						} else {
+							reject(response)
+						}
+					},
 					reject
 				);
 		});
