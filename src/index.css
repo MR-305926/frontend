@@ -15,6 +15,13 @@
 	--heading: system-ui, 'Segoe UI', Roboto, sans-serif;
 	--mono: ui-monospace, Consolas, monospace;
 
+	/* CUSTOM START */
+
+	--error-foreground: white;
+	--error-background: red;
+
+	/* CUSTOM END */
+
 	font: 18px/145% var(--sans);
 	letter-spacing: 0.18px;
 	color-scheme: light dark;
@@ -165,12 +172,30 @@ aside {
 	min-height: 100%;
 }
 
+aside>div>form>p {
+	color: var(--error-foreground);
+	background-color: var(--error-background);
+}
+
 .half {
 	justify-content: center;
 }
 
 .half>* {
 	padding: 1%;
+}
+
+.table {
+	overflow: scroll;
+}
+
+.tableCell {
+	border: 1px solid;
+	text-align: center;
+}
+
+.tableCell>* {
+	margin: 5%;
 }
 
 #toggleAside {

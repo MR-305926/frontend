@@ -19,7 +19,7 @@ function genCells(headers, content) {
 
 	let cells = [];
 	for (let header of headers) {
-		cells.push(<div key={header} className="tableHeader">{header}</div>);
+		cells.push(<div key={header} className="tableHeader tableCell">{header}</div>);
 	}
 	let buffer;
 	/** @type {string} */

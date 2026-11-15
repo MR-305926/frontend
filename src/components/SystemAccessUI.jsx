@@ -9,7 +9,7 @@ const passwordKey = "password";
 const loginFormContent = (
 	<>
 		<input name={usernameKey} type="text" placeholder="usuario" />
-		<input name={passwordKey} type="password" placeholder="contrasenia" />
+		<input name={passwordKey} type="password" placeholder="contraseña" />
 		<input type="submit" value={"🔓"} />
 	</>
 );
