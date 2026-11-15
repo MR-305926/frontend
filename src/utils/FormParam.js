@@ -13,6 +13,7 @@ const FieldType = {
 };
 
 /** @typedef {{[name:string]:{alias:string,type:FieldType,rules?:(import("joi").AnySchema)}}} FormSchema */
+/** @typedef {(session:import("../utils/SessionManager").default, paginationState:PaginationState, consumer:import("react").Dispatch<import("react").SetStateAction<Record<string,string>[]>>,navigate:import("react-router").NavigateFunction,setFormDisabled:import("react").Dispatch.<import("react").SetStateAction<boolean>>) => import("react-hook-form").SubmitHandler<import("react-hook-form").FieldValues, void>} FormParamHandler */
 
 /**
  * @param {FormSchema} rawSchema
@@ -46,7 +47,7 @@ class FormParam {
 	#handler;
 	/**
 	 * @param {FormSchema} schema
-	 * @param {(session:import("../utils/SessionManager").default, paginationState:PaginationState, consumer:import("react").Dispatch<import("react").SetStateAction<Record<string,string>[]>>,navigate:import("react-router").NavigateFunction) => import("react-hook-form").SubmitHandler<import("react-hook-form").FieldValues, void>} handler
+	 * @param {FormParamHandler} handler
 	 */
 	constructor(schema, handler) {
 		this.#validator = parseSchema(schema);

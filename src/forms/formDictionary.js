@@ -5,21 +5,25 @@ import FormParam, { FieldType } from "../utils/FormParam";
 import { doNothing } from "../utils/constFunction.js";
 import asISBN13 from "../utils/asISBN13.js";
 
+/** @typedef {(session:import("../utils/SessionManager").default, paginationState:import("../utils/PaginationState").default, consumer:import("react").Dispatch<import("react").SetStateAction<Record<string,string>[]>>,navigate:import("react-router").NavigateFunction,data:import("react-hook-form").FieldValues) => Promise<any>} FormDictionaryHandler */
+
 /**
- * @param {(session:import("../utils/SessionManager").default,paginationState:import("../utils/PaginationState").default,data:import("react-hook-form").FieldValues,consumer:import("react").Dispatch<import("react").SetStateAction<Record<string,string>[]>>)=>void} handler 
+ * @param {FormDictionaryHandler} handler 
+ * @returns {import("../utils/FormParam").FormParamHandler}
  */
 function wrapHandler(handler) {
 	/**
-	 * @param {import("../utils/SessionManager").default} session
-	 * @param {import("../utils/PaginationState").default} paginationState
-	 * @param {import("react").Dispatch<import("react").SetStateAction<Record<string,string>[]>>} consumer
+	 * @type {import("../utils/FormParam").FormParamHandler}
 	 */
-	return function (session, paginationState, consumer) {
+	return function (session, paginationState, consumer, navigate, setFormDisabled) {
 		/**
 		 * @param {import("react-hook-form").FieldValues} data
 		 */
 		return function (data) {
-			handler(session, paginationState, data, consumer);
+			setFormDisabled(true);
+			handler(session, paginationState, consumer, navigate, data).finally(
+				() => setFormDisabled(false)
+			);
 		}
 	}
 }
@@ -66,7 +70,7 @@ const formDictionary = {
 				)
 			}
 		},
-		wrapHandler((session, paginationState, data, consumer) => {
+		wrapHandler((session, paginationState, consumer, navigate, data) => {
 			let selector = [];
 			/** @type {({name:string,floor?:number,roof?:number,value?:string})[]} */
 			let where = [];
@@ -106,7 +110,7 @@ const formDictionary = {
 			if (skip > 0) body["skip"] = skip;
 			body["amount"] = amount;
 
-			session.postResource(session.apiOrigin() + "/bookGet", body).then(
+			return session.postResource(session.apiOrigin() + "/bookGet", body).then(
 				(value) => consumer(value.value),
 				doNothing
 			);
@@ -120,20 +124,27 @@ const formDictionary = {
 				rules: Joi.string().min(1).required()
 			}
 		},
-		wrapHandler((session, paginationState, data, consumer) => {
+		wrapHandler((session, paginationState, consumer, navigate, data) => {
 			let newPassword = data["password"];
-			session.postResource(session.apiOrigin() + "/changeMyPassword", { password: newPassword }).then(
-				() => { session.clearSession(); consumer([{ "Se ha cambiado la contraseña": "" }]); },
+			return session.postResource(session.apiOrigin() + "/changeMyPassword", { password: newPassword }).then(
+				() => { session.clearSession(); navigate("/"); },
 				() => { consumer([{ "No se pudo cambiar la contraseña": "" }]) }
 			)
 		})
 	),
 	"deleteMyAccount": new FormParam(
 		{
+			"confirmation": {
+				alias: "Estoy seguro de que quiero eliminar mi cuenta de manera permanente e irreversible",
+				type: FieldType.CHECKBOX,
+				rules: Joi.boolean().invalid(false).messages({
+					"any.invalid": "Falta confirmar la acción"
+				})
+			}
 		},
-		wrapHandler((session, paginationState, data, consumer) => {
-			session.postResource(session.apiOrigin() + "/deleteMyAccount").then(
-				() => { return session.clearSession(); },
+		wrapHandler((session, paginationState, consumer, navigate, data) => {
+			return session.postResource(session.apiOrigin() + "/deleteMyAccount").then(
+				() => { session.clearSession(); consumer([{ "Cuenta eliminada": "" }]); },
 				doNothing
 			)
 		})
@@ -141,8 +152,8 @@ const formDictionary = {
 	"upgradeMyAccount": new FormParam(
 		{
 		},
-		wrapHandler((session, paginationState, data, consumer) => {
-			session.postResource(session.apiOrigin() + "/upgradeMyAccount").then(
+		wrapHandler((session, paginationState, consumer, navigate, data) => {
+			return session.postResource(session.apiOrigin() + "/upgradeMyAccount").then(
 				() => { session.clearSession(); },
 				doNothing
 			)
@@ -204,7 +215,7 @@ const formDictionary = {
 				)
 			}
 		},
-		wrapHandler((session, paginationState, data, consumer) => {
+		wrapHandler((session, paginationState, consumer, navigate, data) => {
 			let selector = [];
 			/** @type {({name:string,floor?:number,roof?:number,value?:string})[]} */
 			let where = [];
@@ -261,7 +272,7 @@ const formDictionary = {
 			if (skip > 0) body["skip"] = skip;
 			body["amount"] = amount;
 
-			session.postResource(session.apiOrigin() + "/pagemarkerGet", body).then(
+			return session.postResource(session.apiOrigin() + "/pagemarkerGet", body).then(
 				(value) => consumer(value.value),
 				doNothing
 			);
@@ -280,13 +291,13 @@ const formDictionary = {
 				rules: Joi.number().min(1).required()
 			}
 		},
-		wrapHandler((session, paginationState, data, consumer) => {
+		wrapHandler((session, paginationState, consumer, navigate, data) => {
 			let id = data["id"];
 			let marker = data["marker"];
 
 			let body = { id, marker };
 
-			session.postResource(session.apiOrigin() + "/pagemarkerGet", body).then(
+			return session.postResource(session.apiOrigin() + "/pagemarkerGet", body).then(
 				(value) => consumer(value.value),
 				doNothing
 			);
@@ -300,12 +311,12 @@ const formDictionary = {
 				rules: Joi.string().required()
 			}
 		},
-		wrapHandler((session, paginationState, data, consumer) => {
+		wrapHandler((session, paginationState, consumer, navigate, data) => {
 			let book = data["book"];
 
 			let body = { where: [{ name: "book", value: book }] };
 
-			session.postResource(session.apiOrigin() + "/pagemarkerRemove", body).then(
+			return session.postResource(session.apiOrigin() + "/pagemarkerRemove", body).then(
 				(value) => consumer([{ ELIMINADO_EL_MARCAPAGINAS: book }]),
 				doNothing
 			);
@@ -319,12 +330,12 @@ const formDictionary = {
 				rules: Joi.string().required()
 			}
 		},
-		wrapHandler((session, paginationState, data, consumer) => {
+		wrapHandler((session, paginationState, consumer, navigate, data) => {
 			let book = data["book"];
 
 			let body = { book: book };
 
-			session.postResource(session.apiOrigin() + "/pagemarkerRemove", body).then(
+			return session.postResource(session.apiOrigin() + "/pagemarkerRemove", body).then(
 				(value) => consumer([{ NUEVO_MARCAPAGINAS: book }]),
 				doNothing
 			);
@@ -348,14 +359,14 @@ const formDictionary = {
 				rules: Joi.number().min(1).required()
 			}
 		},
-		wrapHandler((session, paginationState, data, consumer) => {
+		wrapHandler((session, paginationState, consumer, navigate, data) => {
 			let isbn = data["isbn"];
 			let title = data["title"];
 			let pageCount = data["pageCount"];
 
 			let body = { isbn, title, pageCount };
 
-			session.postResource(session.apiOrigin() + "/bookAdd", body).then(
+			return session.postResource(session.apiOrigin() + "/bookAdd", body).then(
 				(value) => consumer([body]),
 				doNothing
 			)
@@ -394,7 +405,7 @@ const formDictionary = {
 				)
 			}
 		},
-		wrapHandler((session, paginationState, data, consumer) => {
+		wrapHandler((session, paginationState, consumer, navigate, data) => {
 			let isbn = data["isbn"];
 			let title = data["title"];
 			let pageCountMin = data["pageCountMin"];
@@ -425,7 +436,7 @@ const formDictionary = {
 
 			let body = { where: where };
 
-			session.postResource(session.apiOrigin() + "/bookRemove", body).then(
+			return session.postResource(session.apiOrigin() + "/bookRemove", body).then(
 				consumer,
 				doNothing
 			)
@@ -455,13 +466,13 @@ const formDictionary = {
 				).required()
 			}
 		},
-		wrapHandler((session, paginationState, data, consumer) => {
+		wrapHandler((session, paginationState, consumer, navigate, data) => {
 			let book = data["book"];
 			let bookgenre = data["bookgenre"];
 
 			let body = { book, bookgenre };
 
-			session.postResource(session.apiOrigin() + "/bookgenreAdd").then(
+			return session.postResource(session.apiOrigin() + "/bookgenreAdd").then(
 				() => consumer([body]),
 				doNothing
 			);
@@ -492,7 +503,7 @@ const formDictionary = {
 				)
 			}
 		},
-		wrapHandler((session, paginationState, data, consumer) => {
+		wrapHandler((session, paginationState, consumer, navigate, data) => {
 			let book = data["book"];
 			let genre = data["genre"];
 
@@ -502,7 +513,7 @@ const formDictionary = {
 
 			let body = { where };
 
-			session.postResource(session.apiOrigin() + "/bookgenreRemove", body).then(
+			return session.postResource(session.apiOrigin() + "/bookgenreRemove", body).then(
 				consumer,
 				doNothing
 			);
