@@ -4,8 +4,11 @@ import Joi from "joi";
 import FormParam, { FieldType } from "../utils/FormParam";
 import { doNothing } from "../utils/constFunction.js";
 import asISBN13 from "../utils/asISBN13.js";
+import emptyObject from "../utils/emptyObject.js";
 
-/** @typedef {(session:import("../utils/SessionManager").default, paginationState:import("../utils/PaginationState").default, consumer:import("react").Dispatch<import("react").SetStateAction<Record<string,string>[]>>,navigate:import("react-router").NavigateFunction,data:import("react-hook-form").FieldValues) => Promise<any>} FormDictionaryHandler */
+/** @typedef {(session:import("../utils/SessionManager").default, paginationState:import("../utils/PaginationState").default, consumer:(data:{[k:string]:string}[],headersAlias:{[k:string]:string})=>void,navigate:import("react-router").NavigateFunction,data:import("react-hook-form").FieldValues) => Promise<any>} FormDictionaryHandler */
+
+const defaultHeadersAlias = emptyObject();
 
 /**
  * @param {FormDictionaryHandler} handler 
@@ -17,15 +20,31 @@ function wrapHandler(handler) {
 	 */
 	return function (session, paginationState, consumer, navigate, setFormDisabled) {
 		/**
+		 * @param {{[k:string]:string}[]} data
+		 * @param {{[k:string]:string}} headersAlias
+		 */
+		function wrappedConsumer(data, headersAlias) {
+			consumer(normalize(data, headersAlias));
+		}
+		/**
 		 * @param {import("react-hook-form").FieldValues} data
 		 */
 		return function (data) {
 			setFormDisabled(true);
-			handler(session, paginationState, consumer, navigate, data).finally(
+			handler(session, paginationState, wrappedConsumer, navigate, data).finally(
 				() => setFormDisabled(false)
 			);
 		}
 	}
+}
+
+/**
+ * @param {{[k:string]:string}[]} data
+ * @param {{[k:string]:string}}headersAlias
+ * @returns {{headersAlias:{[k:string]:string},data:{[k:string]:string}[]}}
+ */
+function normalize(data, headersAlias) {
+	return { headersAlias: headersAlias, data: data };
 }
 
 /**
@@ -111,7 +130,12 @@ const formDictionary = {
 			body["amount"] = amount;
 
 			return session.postResource(session.apiOrigin() + "/bookGet", body).then(
-				(value) => consumer(value.value),
+				(value) => consumer(value.value, {
+					"_id": "id",
+					"title": "titulo",
+					"isbn": "ISBN",
+					"pageCount": "#paginas"
+				}),
 				doNothing
 			);
 		})
@@ -128,7 +152,7 @@ const formDictionary = {
 			let newPassword = data["password"];
 			return session.postResource(session.apiOrigin() + "/changeMyPassword", { password: newPassword }).then(
 				() => { session.clearSession(); navigate("/"); },
-				() => { consumer([{ "No se pudo cambiar la contraseña": "" }]) }
+				() => { consumer([{ "No se pudo cambiar la contraseña": "" }], defaultHeadersAlias) }
 			)
 		})
 	),
@@ -144,7 +168,7 @@ const formDictionary = {
 		},
 		wrapHandler((session, paginationState, consumer, navigate, data) => {
 			return session.postResource(session.apiOrigin() + "/deleteMyAccount").then(
-				() => { session.clearSession(); consumer([{ "Cuenta eliminada": "" }]); },
+				() => { session.clearSession(); navigate("/"); },
 				doNothing
 			)
 		})
@@ -154,7 +178,7 @@ const formDictionary = {
 		},
 		wrapHandler((session, paginationState, consumer, navigate, data) => {
 			return session.postResource(session.apiOrigin() + "/upgradeMyAccount").then(
-				() => { session.clearSession(); },
+				() => { session.clearSession(); navigate("/"); },
 				doNothing
 			)
 		})
@@ -273,7 +297,11 @@ const formDictionary = {
 			body["amount"] = amount;
 
 			return session.postResource(session.apiOrigin() + "/pagemarkerGet", body).then(
-				(value) => consumer(value.value),
+				(value) => consumer(value.value, {
+					"book":"ID del libro",
+					"marker": "posición del marcador",
+					"pageCount":"cantidad de páginas del libro"
+				}),
 				doNothing
 			);
 		})
@@ -298,7 +326,7 @@ const formDictionary = {
 			let body = { id, marker };
 
 			return session.postResource(session.apiOrigin() + "/pagemarkerGet", body).then(
-				(value) => consumer(value.value),
+				(value) => consumer(value.value, defaultHeadersAlias),
 				doNothing
 			);
 		})
@@ -317,7 +345,7 @@ const formDictionary = {
 			let body = { where: [{ name: "book", value: book }] };
 
 			return session.postResource(session.apiOrigin() + "/pagemarkerRemove", body).then(
-				(value) => consumer([{ ELIMINADO_EL_MARCAPAGINAS: book }]),
+				(value) => consumer([{ "SE ELIMINO EL MARCAPAGINAS": book }], defaultHeadersAlias),
 				doNothing
 			);
 		})
@@ -336,7 +364,7 @@ const formDictionary = {
 			let body = { book: book };
 
 			return session.postResource(session.apiOrigin() + "/pagemarkerRemove", body).then(
-				(value) => consumer([{ NUEVO_MARCAPAGINAS: book }]),
+				(value) => consumer([{ "NUEVO MARCAPAGINAS": book }], defaultHeadersAlias),
 				doNothing
 			);
 		})
@@ -367,7 +395,12 @@ const formDictionary = {
 			let body = { isbn, title, pageCount };
 
 			return session.postResource(session.apiOrigin() + "/bookAdd", body).then(
-				(value) => consumer([body]),
+				(value) => consumer([body], {
+					"_id": "id",
+					"title": "titulo",
+					"isbn": "ISBN",
+					"pageCount": "#paginas"
+				}),
 				doNothing
 			)
 		})
@@ -437,7 +470,12 @@ const formDictionary = {
 			let body = { where: where };
 
 			return session.postResource(session.apiOrigin() + "/bookRemove", body).then(
-				consumer,
+				(value) => consumer(value, {
+					"_id": "id",
+					"title": "titulo",
+					"isbn": "ISBN",
+					"pageCount": "#paginas"
+				}),
 				doNothing
 			)
 		})
@@ -473,7 +511,10 @@ const formDictionary = {
 			let body = { book, bookgenre };
 
 			return session.postResource(session.apiOrigin() + "/bookgenreAdd").then(
-				() => consumer([body]),
+				() => consumer([body], {
+					"book":"ID del libro"
+					"bookgenre":"Género"
+				}),
 				doNothing
 			);
 		})
@@ -514,7 +555,10 @@ const formDictionary = {
 			let body = { where };
 
 			return session.postResource(session.apiOrigin() + "/bookgenreRemove", body).then(
-				consumer,
+				(value) => consumer([data], {
+					"book":"ID del libro"
+					"bookgenre":"Género"
+				}),
 				doNothing
 			);
 		})

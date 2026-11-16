@@ -6,9 +6,9 @@ import { useForm } from "react-hook-form";
 import spaJoi from "../assets/spaJoi.js";
 import { useOutletContext } from "react-router";
 import PaginationState from "../utils/PaginationState.js";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-/**@typedef {{session:import("../utils/SessionManager.js").default,paginationState:PaginationState, updatePaginationState:(value:import("../utils/PaginationState").default) => void,consumer:import("react").Dispatch<import("react").SetStateAction<{[k:string]:string}[]>>,navigate:import("react-router").NavigateFunction}} FormContext */
+/**@typedef {{session:import("../utils/SessionManager.js").default,paginationState:PaginationState, updatePaginationState:(value:import("../utils/PaginationState").default) => void,consumer:import("react").Dispatch<import("react").SetStateAction<{data:{[k:string]:string}[],headersAlias:{[k:string]:string}}>>,navigate:import("react-router").NavigateFunction}} FormContext */
 
 /**
  * @param {import("react-hook-form").FormState<import("react-hook-form").FieldValues>} formState
@@ -36,11 +36,16 @@ function useFieldFactory(formState, register) {
  * @param {FormParam} props.param
  */
 function Form({ param }) {
-	let { register, handleSubmit, formState } = useForm({
+	let formManager = useForm({
 		resolver: joiResolver(param.schema(), {
 			messages: spaJoi
 		})
 	});
+	let { register, handleSubmit, formState } = formManager;
+
+	useEffect(() => {
+		formManager.reset();
+	}, [param, formManager])
 
 	let [disabled, setDisabled] = useState(false);
 
@@ -82,18 +87,24 @@ function Form({ param }) {
 		));
 	}
 
+	let staticComponents = (
+		<>
+			<button key={"submit"} type={"submit"} disabled={disabled}>⌯⌲</button>
+			<div>
+				<button key={"pagination_index_minus"} onClick={pageIndexBackward}>{"⇐"}</button>
+				<input key={"pagination_index"} name="pageIndex" type="number" min={1} value={paginationState.pageIndex} onChange={updatePageIndex} />
+				<label htmlFor="pageCount">#</label>
+				<input key={"pagination_size"} name="pageCount" type="number" min={1} value={paginationState.pageSize} onChange={updatePageSize} />
+				<button key={"pagination_index_plus"} onClick={pageIndexForward}>{"⇒"}</button>
+			</div>
+		</>
+	);
+
 	return (
 		<div>
-			<form onSubmit={handleSubmit(handler)}>
+			<form onSubmit={handleSubmit(handler)} onLoad={(event) => event.currentTarget.reset()}>
 				{param.fields().map(fieldFactory)}
-				<button key={"submit"} type={"submit"} disabled={disabled}>⌯⌲</button>
-				<div>
-					<button key={"pagination_index_minus"} onClick={pageIndexBackward}>{"⇐"}</button>
-					<input key={"pagination_index"} name="pageIndex" type="number" min={1} value={paginationState.pageIndex} onChange={updatePageIndex} />
-					<label htmlFor="pageCount">#</label>
-					<input key={"pagination_size"} name="pageCount" type="number" min={1} value={paginationState.pageSize} onChange={updatePageSize} />
-					<button key={"pagination_index_plus"} onClick={pageIndexForward}>{"⇒"}</button>
-				</div>
+				{staticComponents}
 			</form>
 		</div>
 	)

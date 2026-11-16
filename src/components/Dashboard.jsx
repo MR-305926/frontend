@@ -9,6 +9,8 @@ import { useQuery } from "@tanstack/react-query";
 import DashboardNav from "./DashboardNav.jsx";
 import FormPanel from "./FormPanel.jsx";
 import Table from "./Table.jsx";
+import emptyObjectArray from "../utils/emptyObjectArray.js";
+import emptyObject from "../utils/emptyObject.js";
 
 /**
  * @param {import("react-router").NavigateFunction} navigate
@@ -40,7 +42,8 @@ function useFetchLinkData(session) {
  */
 function Dashboard({ session, defaultPageSize }) {
 	//WARN LinkPanel assumes that it is child of dashboard & dashboard watches out for null sessions
-	let logout = useLogout(useNavigate(), session);
+	let navigate = useNavigate()
+	let logout = useLogout(navigate, session);
 
 	const [paginationState, updatePaginationState] = useState(new PaginationState(defaultPageSize, 1));
 	const [formParam, updateFormParam] = useState(new FormParam({}, () => () => { return; }));
@@ -53,10 +56,16 @@ function Dashboard({ session, defaultPageSize }) {
 
 	let queryFetchLinkData = useFetchLinkData(session);
 
-	let [content, updateContent] = useState(Object({}));
+	let [content, updateContent] = useState({ headersAlias: emptyObject(), data: emptyObjectArray() });
 
 	/** @type {import("./Form.jsx").FormContext} */
-	const context = { session, paginationState, updatePaginationState, consumer: updateContent };
+	const context = {
+		session: session,
+		paginationState: paginationState,
+		updatePaginationState: updatePaginationState,
+		consumer: updateContent,
+		navigate: navigate
+	};
 
 	return (
 		!session.hasToken() ?
@@ -65,7 +74,7 @@ function Dashboard({ session, defaultPageSize }) {
 				<DashboardNav paginationState={paginationState} updatePaginationState={updatePaginationState} linkPanelDisplayState={linkPanelDisplayState} toggleLinkPanel={toggleLinkPanel} formDisplayState={formDisplayState} toggleForm={toggleForm} />
 				<div>
 					<LinkPanel visible={linkPanelDisplayState} queryFetchLinks={queryFetchLinkData} formParam={formParam} updateFormParam={updateFormParam} logout={logout} />
-					<Table content={content} />
+					<Table headersAlias={content.headersAlias} content={content.data} />
 					<FormPanel formDisplayState={formDisplayState} formContext={context} />
 				</div>
 			</>
