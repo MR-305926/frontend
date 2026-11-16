@@ -192,6 +192,7 @@ aside>div>form>p {
 .tableCell {
 	border: 1px solid;
 	text-align: center;
+	padding: 10px;
 }
 
 .tableCell>* {
