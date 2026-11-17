@@ -298,9 +298,9 @@ const formDictionary = {
 
 			return session.postResource(session.apiOrigin() + "/pagemarkerGet", body).then(
 				(value) => consumer(value.value, {
-					"book": "ID del libro",
+					"book":"ID del libro",
 					"marker": "posición del marcador",
-					"pageCount": "cantidad de páginas del libro"
+					"pageCount":"cantidad de páginas del libro"
 				}),
 				doNothing
 			);
@@ -512,8 +512,8 @@ const formDictionary = {
 
 			return session.postResource(session.apiOrigin() + "/bookgenreAdd").then(
 				() => consumer([body], {
-					"book": "ID del libro",
-					"bookgenre": "Género"
+					"book":"ID del libro"
+					"bookgenre":"Género"
 				}),
 				doNothing
 			);
@@ -556,8 +556,8 @@ const formDictionary = {
 
 			return session.postResource(session.apiOrigin() + "/bookgenreRemove", body).then(
 				(value) => consumer([data], {
-					"book": "ID del libro",
-					"bookgenre": "Género"
+					"book":"ID del libro"
+					"bookgenre":"Género"
 				}),
 				doNothing
 			);
